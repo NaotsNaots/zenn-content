@@ -1,0 +1,40 @@
+name: Scheduled X Post (Weekdays 7:30 JST)
+
+on:
+  schedule:
+    # 平日 7:30 JST = UTC 22:30 前日
+    # UTC: 日〜木の 22:30 = JST: 月〜金の 7:30
+    - cron: '30 22 * * 0-4'
+
+  # 手動実行（テスト用）
+  workflow_dispatch:
+
+jobs:
+  post-tweet:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # キュー更新のコミットに必要
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install anthropic tweepy
+
+      - name: Run scheduled tweet
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          ZENN_USERNAME: swallow_eng
+        run: python scripts/scheduled_tweet.py
